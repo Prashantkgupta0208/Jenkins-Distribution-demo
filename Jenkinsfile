@@ -7,7 +7,7 @@ pipeline {
         stage('Deploy Website on Master') {
 
             agent {
-                label 'master'
+                label 'any'
             }
 
             steps {
