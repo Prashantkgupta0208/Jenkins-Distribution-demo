@@ -13,7 +13,8 @@ pipeline {
         }
 
         stage('Deploy HTML on Master') {
-            agent any
+            agent {
+                label 'master'
 
             steps {
 
