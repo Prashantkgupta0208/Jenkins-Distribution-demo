@@ -6,9 +6,7 @@ pipeline {
 
         stage('Deploy Website on Master') {
 
-            agent {
-                label 'any'
-            }
+            agent any
 
             steps {
 
@@ -32,9 +30,7 @@ pipeline {
 
         stage('Verify Website') {
 
-            agent {
-                label 'master'
-            }
+            agent any
 
             steps {
 
