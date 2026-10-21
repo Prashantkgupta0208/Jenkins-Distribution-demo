@@ -4,22 +4,19 @@ pipeline {
 
     stages {
 
-        stage('Checkout Source') {
-            agent any
-
-            steps {
-                git 'https://github.com/Prashantkgupta0208/Jenkins-Distribution-demo.git'
-            }
-        }
-
         stage('Deploy HTML on Master') {
+
             agent {
                 label 'master'
+            }
 
             steps {
 
                 sh '''
                 echo "Deploying Website"
+
+                pwd
+                ls -lrt
 
                 sudo cp index.html /var/www/html/index.html
 
@@ -31,9 +28,13 @@ pipeline {
         }
 
         stage('Verify Master Deployment') {
-            agent any
+
+            agent {
+                label 'master'
+            }
 
             steps {
+
                 sh '''
                 hostname
                 ls -l /var/www/html
@@ -50,12 +51,10 @@ pipeline {
             steps {
 
                 sh '''
-                echo "Executing on Worker Node"
+                echo "Running on Worker"
 
                 hostname
-
                 whoami
-
                 pwd
                 '''
             }
