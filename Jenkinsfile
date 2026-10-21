@@ -6,9 +6,7 @@ pipeline {
 
         stage('Deploy HTML on Master') {
 
-            agent {
-                label 'master'
-            }
+            agent any
 
             steps {
 
@@ -26,38 +24,6 @@ pipeline {
                 '''
             }
         }
-
-        stage('Verify Master Deployment') {
-
-            agent {
-                label 'master'
-            }
-
-            steps {
-
-                sh '''
-                hostname
-                ls -l /var/www/html
-                '''
-            }
-        }
-
-        stage('Run Job on Worker') {
-
-            agent {
-                label 'node1'
-            }
-
-            steps {
-
-                sh '''
-                echo "Running on Worker"
-
-                hostname
-                whoami
-                pwd
-                '''
-            }
-        }
     }
 }
+        
