@@ -1,3 +1,4 @@
+
 pipeline {
 
     agent none
@@ -6,7 +7,9 @@ pipeline {
 
         stage('Deploy Website on Master') {
 
-            agent any
+            agent {
+                label 'controller'
+            }
 
             steps {
 
@@ -30,7 +33,9 @@ pipeline {
 
         stage('Verify Website') {
 
-            agent any
+            agent {
+                label 'controller'
+            }
 
             steps {
 
@@ -47,7 +52,7 @@ pipeline {
         stage('Checkout Calculator Repo') {
 
             agent {
-                label 'node1'
+                label 'node-1'
             }
 
             steps {
@@ -63,7 +68,7 @@ pipeline {
         stage('Deploy Calculator on Worker') {
 
             agent {
-                label 'node1'
+                label 'node-1'
             }
 
             steps {
@@ -94,7 +99,7 @@ pipeline {
         stage('Verify Calculator') {
 
             agent {
-                label 'node1'
+                label 'node-1'
             }
 
             steps {
