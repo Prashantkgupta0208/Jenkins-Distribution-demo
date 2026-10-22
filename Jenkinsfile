@@ -13,10 +13,14 @@ pipeline {
             steps {
 
                 sh '''
+                echo "===== CONTROLLER NODE ====="
+
                 hostname
 
+                # Copy website to Apache web root
                 sudo cp index.html /var/www/html/index.html
 
+                # Restart Apache
                 sudo systemctl restart apache2
 
                 echo "Website deployed successfully"
@@ -51,7 +55,7 @@ pipeline {
                 dir('calculator') {
 
                     git branch: 'main',
-                        url: 'https://github.com/Prashantkgupta0208/Python-calculator.git'
+                    url: 'https://github.com/Prashantkgupta0208/Python-calculator.git'
                 }
             }
         }
@@ -67,16 +71,20 @@ pipeline {
                 dir('calculator') {
 
                     sh '''
-                    rm -rf venv
+                    echo "===== WORKER NODE ====="
 
-                    python3 -m venv venv
+                    hostname
 
+                    # Activate existing virtual environment
                     . venv/bin/activate
 
+                    # Install any new packages
                     pip install -r requirements.txt
 
+                    # Stop old app if running
                     pkill -f app.py || true
 
+                    # Start calculator in background
                     nohup python app.py > app.log 2>&1 &
 
                     sleep 5
@@ -95,13 +103,20 @@ pipeline {
 
             steps {
 
-                sh '''
-                hostname
+                dir('calculator') {
 
-                ps -ef | grep app.py | grep -v grep || true
+                    sh '''
+                    hostname
 
-                ss -tulpn | grep 5000 || true
-                '''
+                    echo "Running Process"
+
+                    ps -ef | grep app.py | grep -v grep || true
+
+                    echo "Listening Port"
+
+                    ss -tulpn | grep 5000 || true
+                    '''
+                }
             }
         }
     }
