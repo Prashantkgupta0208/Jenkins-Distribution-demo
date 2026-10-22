@@ -4,13 +4,6 @@ pipeline {
 
     stages {
 
-        /*
-        ==========================================
-        CONTROLLER NODE
-        WEBSITE DEPLOYMENT
-        ==========================================
-        */
-
         stage('Deploy Website on Controller') {
 
             agent {
@@ -22,13 +15,10 @@ pipeline {
                 sh '''
                 echo "===== CONTROLLER NODE ====="
 
-                # Display current machine
                 hostname
 
-                # Copy website to Apache web folder
                 sudo cp index.html /var/www/html/index.html
 
-                # Restart Apache
                 sudo systemctl restart apache2
 
                 echo "Website deployed successfully"
@@ -54,13 +44,6 @@ pipeline {
             }
         }
 
-        /*
-        ==========================================
-        WORKER NODE
-        PYTHON CALCULATOR
-        ==========================================
-        */
-
         stage('Checkout Calculator Repo') {
 
             agent {
@@ -72,7 +55,7 @@ pipeline {
                 dir('calculator') {
 
                     git branch: 'main',
-                    url: 'https://github.com/Prashantkgupta0208/Python-calculator.git'
+                        url: 'https://github.com/Prashantkgupta0208/Python-calculator.git'
                 }
             }
         }
@@ -92,7 +75,6 @@ pipeline {
 
                     hostname
 
-                    # Create venv ONLY if it does not exist
                     if [ ! -f "venv/bin/activate" ]; then
 
                         echo "Creating Python Virtual Environment"
@@ -143,10 +125,39 @@ pipeline {
                     sh '''
                     . venv/bin/activate
 
-                    # Stop old instance
                     pkill -f app.py || true
 
-                    # Start calculator
                     nohup python app.py > app.log 2>&1 &
 
-              
+                    sleep 5
+
+                    echo "Calculator Started"
+                    '''
+                }
+            }
+        }
+
+        stage('Verify Calculator') {
+
+            agent {
+                label 'node-1'
+            }
+
+            steps {
+
+                dir('calculator') {
+
+                    sh '''
+                    echo "===== VERIFY CALCULATOR ====="
+
+                    hostname
+
+                    ps -ef | grep app.py | grep -v grep || true
+
+                    ss -tulpn | grep 5000 || true
+                    '''
+                }
+            }
+        }
+    }
+}
