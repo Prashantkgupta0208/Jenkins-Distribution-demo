@@ -43,7 +43,7 @@ pipeline {
                 '''
             }
         }
-
+/*
         stage('Checkout Calculator Repo') {
 
             agent {
@@ -159,5 +159,6 @@ pipeline {
                 }
             }
         }
+        */
     }
 }
