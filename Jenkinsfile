@@ -4,6 +4,12 @@ pipeline {
 
     stages {
 
+        /*
+        ==========================================
+        CONTROLLER NODE STAGES
+        ==========================================
+        */
+
         stage('Deploy Website on Controller') {
 
             agent {
@@ -15,9 +21,10 @@ pipeline {
                 sh '''
                 echo "===== CONTROLLER NODE ====="
 
+                # Show machine name
                 hostname
 
-                # Copy website to Apache web root
+                # Deploy website to Apache location
                 sudo cp index.html /var/www/html/index.html
 
                 # Restart Apache
@@ -37,12 +44,21 @@ pipeline {
             steps {
 
                 sh '''
+                echo "===== VERIFY WEBSITE ====="
+
                 hostname
 
+                # Verify website content
                 curl http://localhost
                 '''
             }
         }
+
+        /*
+        ==========================================
+        WORKER NODE STAGES
+        ==========================================
+        */
 
         stage('Checkout Calculator Repo') {
 
@@ -60,7 +76,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Calculator') {
+        stage('Prepare Python Environment') {
 
             agent {
                 label 'node-1'
@@ -71,17 +87,57 @@ pipeline {
                 dir('calculator') {
 
                     sh '''
-                    echo "===== WORKER NODE ====="
+                    echo "===== PREPARE PYTHON ENV ====="
 
                     hostname
 
-                    # Activate existing virtual environment
+                    # Create virtual environment only first time
+                    if [ ! -d "venv" ]; then
+                        python3 -m venv venv
+                    fi
+
+                    echo "Virtual Environment Ready"
+                    '''
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+
+            agent {
+                label 'node-1'
+            }
+
+            steps {
+
+                dir('calculator') {
+
+                    sh '''
+                    # Activate venv
                     . venv/bin/activate
 
-                    # Install any new packages
+                    # Install packages from requirements.txt
                     pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
 
-                    # Stop old app if running
+        stage('Start Calculator') {
+
+            agent {
+                label 'node-1'
+            }
+
+            steps {
+
+                dir('calculator') {
+
+                    sh '''
+                    # Activate venv
+                    . venv/bin/activate
+
+                    # Stop old process if running
                     pkill -f app.py || true
 
                     # Start calculator in background
@@ -89,7 +145,7 @@ pipeline {
 
                     sleep 5
 
-                    echo "Calculator started"
+                    echo "Calculator Started"
                     '''
                 }
             }
@@ -106,14 +162,14 @@ pipeline {
                 dir('calculator') {
 
                     sh '''
+                    echo "===== VERIFY CALCULATOR ====="
+
                     hostname
 
-                    echo "Running Process"
-
+                    # Check process
                     ps -ef | grep app.py | grep -v grep || true
 
-                    echo "Listening Port"
-
+                    # Check listening port
                     ss -tulpn | grep 5000 || true
                     '''
                 }
