@@ -6,7 +6,8 @@ pipeline {
 
         /*
         ==========================================
-        CONTROLLER NODE STAGES
+        CONTROLLER NODE
+        WEBSITE DEPLOYMENT
         ==========================================
         */
 
@@ -21,10 +22,10 @@ pipeline {
                 sh '''
                 echo "===== CONTROLLER NODE ====="
 
-                # Show machine name
+                # Display current machine
                 hostname
 
-                # Deploy website to Apache location
+                # Copy website to Apache web folder
                 sudo cp index.html /var/www/html/index.html
 
                 # Restart Apache
@@ -48,7 +49,6 @@ pipeline {
 
                 hostname
 
-                # Verify website content
                 curl http://localhost
                 '''
             }
@@ -56,7 +56,8 @@ pipeline {
 
         /*
         ==========================================
-        WORKER NODE STAGES
+        WORKER NODE
+        PYTHON CALCULATOR
         ==========================================
         */
 
@@ -91,10 +92,18 @@ pipeline {
 
                     hostname
 
-                    # Create virtual environment only first time
-                    if [ ! -d "venv" ]; then
+                    # Create venv ONLY if it does not exist
+                    if [ ! -f "venv/bin/activate" ]; then
+
+                        echo "Creating Python Virtual Environment"
+
+                        rm -rf venv
+
                         python3 -m venv venv
+
                     fi
+
+                    ls -la venv/bin/activate
 
                     echo "Virtual Environment Ready"
                     '''
@@ -113,10 +122,8 @@ pipeline {
                 dir('calculator') {
 
                     sh '''
-                    # Activate venv
                     . venv/bin/activate
 
-                    # Install packages from requirements.txt
                     pip install -r requirements.txt
                     '''
                 }
@@ -134,46 +141,12 @@ pipeline {
                 dir('calculator') {
 
                     sh '''
-                    # Activate venv
                     . venv/bin/activate
 
-                    # Stop old process if running
+                    # Stop old instance
                     pkill -f app.py || true
 
-                    # Start calculator in background
+                    # Start calculator
                     nohup python app.py > app.log 2>&1 &
 
-                    sleep 5
-
-                    echo "Calculator Started"
-                    '''
-                }
-            }
-        }
-
-        stage('Verify Calculator') {
-
-            agent {
-                label 'node-1'
-            }
-
-            steps {
-
-                dir('calculator') {
-
-                    sh '''
-                    echo "===== VERIFY CALCULATOR ====="
-
-                    hostname
-
-                    # Check process
-                    ps -ef | grep app.py | grep -v grep || true
-
-                    # Check listening port
-                    ss -tulpn | grep 5000 || true
-                    '''
-                }
-            }
-        }
-    }
-}
+              
