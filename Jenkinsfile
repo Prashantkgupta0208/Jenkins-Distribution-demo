@@ -4,7 +4,20 @@ pipeline {
 
     stages {
 
-        stage('Deploy Website on Controller') {
+        stage('Checkout Controller Website') {
+
+            agent {
+                label 'controller'
+            }
+
+            steps {
+
+                git branch: 'main',
+                url: 'https://github.com/Prashantkgupta0208/Jenkins-Distribution-demo.git'
+            }
+        }
+
+        stage('Deploy Controller Website') {
 
             agent {
                 label 'controller'
@@ -21,12 +34,12 @@ pipeline {
 
                 sudo systemctl restart apache2
 
-                echo "Website deployed successfully"
+                echo "Controller Website Deployed"
                 '''
             }
         }
 
-        stage('Verify Website') {
+        stage('Verify Controller Website') {
 
             agent {
                 label 'controller'
@@ -35,16 +48,14 @@ pipeline {
             steps {
 
                 sh '''
-                echo "===== VERIFY WEBSITE ====="
-
                 hostname
 
                 curl http://localhost
                 '''
             }
         }
-/*
-        stage('Checkout Calculator Repo') {
+
+        stage('Checkout Worker Website') {
 
             agent {
                 label 'node-1'
@@ -52,15 +63,15 @@ pipeline {
 
             steps {
 
-                dir('calculator') {
+                dir('worker-site') {
 
                     git branch: 'main',
-                        url: 'https://github.com/Prashantkgupta0208/Python-calculator.git'
+                    url: 'https://github.com/Prashantkgupta0208/html-code-Node-1-Jenkins.git'
                 }
             }
         }
 
-        stage('Prepare Python Environment') {
+        stage('Deploy Worker Website') {
 
             agent {
                 label 'node-1'
@@ -68,32 +79,24 @@ pipeline {
 
             steps {
 
-                dir('calculator') {
+                dir('worker-site') {
 
                     sh '''
-                    echo "===== PREPARE PYTHON ENV ====="
+                    echo "===== WORKER NODE ====="
 
                     hostname
 
-                    if [ ! -f "venv/bin/activate" ]; then
+                    sudo cp index.html /var/www/html/index.html
 
-                        echo "Creating Python Virtual Environment"
+                    sudo systemctl restart apache2
 
-                        rm -rf venv
-
-                        python3 -m venv venv
-
-                    fi
-
-                    ls -la venv/bin/activate
-
-                    echo "Virtual Environment Ready"
+                    echo "Worker Website Deployed"
                     '''
                 }
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Verify Worker Website') {
 
             agent {
                 label 'node-1'
@@ -101,64 +104,12 @@ pipeline {
 
             steps {
 
-                dir('calculator') {
+                sh '''
+                hostname
 
-                    sh '''
-                    . venv/bin/activate
-
-                    pip install -r requirements.txt
-                    '''
-                }
+                curl http://localhost
+                '''
             }
         }
-
-        stage('Start Calculator') {
-
-            agent {
-                label 'node-1'
-            }
-
-            steps {
-
-                dir('calculator') {
-
-                    sh '''
-                    . venv/bin/activate
-
-                    pkill -f app.py || true
-
-                    nohup python app.py > app.log 2>&1 &
-
-                    sleep 5
-
-                    echo "Calculator Started"
-                    '''
-                }
-            }
-        }
-
-        stage('Verify Calculator') {
-
-            agent {
-                label 'node-1'
-            }
-
-            steps {
-
-                dir('calculator') {
-
-                    sh '''
-                    echo "===== VERIFY CALCULATOR ====="
-
-                    hostname
-
-                    ps -ef | grep app.py | grep -v grep || true
-
-                    ss -tulpn | grep 5000 || true
-                    '''
-                }
-            }
-        }
-        */
     }
 }
